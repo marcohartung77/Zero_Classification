@@ -37,7 +37,10 @@ def convert_df(df):
    return df.to_csv(index=False).encode('utf-8')
 
 # Daten für Session State:
-news_list = google_news_rss(query="Bitcoin")
+if "news_topic" not in st.session_state:
+    st.session_state.news_topic = "Bitcoin"
+
+news_list = google_news_rss(query=st.session_state.news_topic)
 news_titles = []
 news_dates = []
 date_title_list = []
@@ -64,6 +67,22 @@ model_choice = st.selectbox(label="Model auswählen", options=["facebook/bart-la
 clf = load_classifier(model_choice)
 
 st.subheader("Texteingabe")
+st.session_state.news_topic = st.text_input(
+    label="Gib eine Thematik ein, für die Nachrichtenabfrage:",
+    value=st.session_state.news_topic
+    )
+
+if st.button("Nachrichten laden"):
+    news_list = google_news_rss(query=st.session_state.news_topic)
+    news_titles = []
+    news_dates = []
+    date_title_list = []
+    for news in news_list:
+        news_titles.append(news["title"])
+        news_dates.append(news["date"])
+        formated_date = news['date'].split(" ")[1:4]
+        short_date = " ".join(formated_date)
+        date_title_list.append(f"{short_date} - {news['title']}")
 
 selectbox_value = st.selectbox(label="Nachrichtentitel auswählen", options=st.session_state.date_title_list)
 
